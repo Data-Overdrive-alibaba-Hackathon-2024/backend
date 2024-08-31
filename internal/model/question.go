@@ -1,8 +1,7 @@
 package model
 
 type GenerateQuestionRequest struct {
-	UserId string `json:"user_id"`
-	Level  int    `json:"level"`
+	Level int `json:"level"`
 }
 
 type GenerateQuestionAIRequest struct {

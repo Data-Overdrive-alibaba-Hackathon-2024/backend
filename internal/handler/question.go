@@ -29,6 +29,8 @@ func NewQuestionHandler(questionService service.QuestionService, logger *zap.Log
 func (h *questionHandler) GenerateQuestion(c *fiber.Ctx) error {
 	var req model.GenerateQuestionRequest
 
+	userId := c.Locals("userId").(string)
+
 	if err := c.BodyParser(&req); err != nil {
 		h.logger.Error("failed to parse request", zap.Error(err))
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -47,7 +49,7 @@ func (h *questionHandler) GenerateQuestion(c *fiber.Ctx) error {
 	}
 
 	if err := h.questionService.InsertQuestion(model.InsertQuestionInput{
-		UserId:        req.UserId,
+		UserId:        userId,
 		Level:         req.Level,
 		Question:      questionText.Question,
 		Options:       questionText.Options,
@@ -67,7 +69,7 @@ func (h *questionHandler) GenerateQuestion(c *fiber.Ctx) error {
 }
 
 func (h *questionHandler) GetQuestion(c *fiber.Ctx) error {
-	userId := c.Params("user_id")
+	userId := c.Locals("userId").(string)
 	level := c.QueryInt("lv")
 
 	question, err := h.questionService.GetQuestion(model.GetQuestionInput{

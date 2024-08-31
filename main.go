@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/data-overdrive-alibaba-hackathon-2024/config"
 	"github.com/data-overdrive-alibaba-hackathon-2024/internal/handler"
+	"github.com/data-overdrive-alibaba-hackathon-2024/internal/middleware"
 	"github.com/data-overdrive-alibaba-hackathon-2024/internal/repository"
 	"github.com/data-overdrive-alibaba-hackathon-2024/internal/service"
 	"github.com/gofiber/fiber/v2"
@@ -22,6 +23,10 @@ func main() {
 	db := config.NewDBPool()
 	defer db.Close()
 
+	userRepository := repository.NewUserRepository(db, logger)
+	userService := service.NewUserService(userRepository, logger)
+	userHandler := handler.NewUserHandler(userService, logger)
+
 	questionRepository := repository.NewQuestionRepository(db, logger)
 	questionService := service.NewQuestionService(questionRepository, logger)
 	questionHandler := handler.NewQuestionHandler(questionService, logger)
@@ -34,9 +39,15 @@ func main() {
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
-	v1.Post("/generate/questions", questionHandler.GenerateQuestion)
-	v1.Get("/questions/:user_id", questionHandler.GetQuestion)
-	v1.Put("/questions/done/:question_id", questionHandler.UpdateQuestionDone)
+
+	//user
+	v1.Post("/auth/register", userHandler.CreateUser)
+	v1.Post("/auth/login", userHandler.Login)
+
+	//question
+	v1.Post("/generate/questions", middleware.JWTMiddleware(), questionHandler.GenerateQuestion)
+	v1.Get("/questions", middleware.JWTMiddleware(), questionHandler.GetQuestion)
+	v1.Put("/questions/done/:question_id", middleware.JWTMiddleware(), questionHandler.UpdateQuestionDone)
 
 	app.Listen(":3000")
 }
