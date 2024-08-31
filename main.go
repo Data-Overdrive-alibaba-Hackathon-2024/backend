@@ -35,6 +35,8 @@ func main() {
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 	v1.Post("/generate/questions", questionHandler.GenerateQuestion)
+	v1.Get("/questions/:user_id", questionHandler.GetQuestion)
+	v1.Put("/questions/done/:question_id", questionHandler.UpdateQuestionDone)
 
 	app.Listen(":3000")
 }
