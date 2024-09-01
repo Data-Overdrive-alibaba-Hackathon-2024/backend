@@ -7,6 +7,7 @@ import (
 	"github.com/data-overdrive-alibaba-hackathon-2024/internal/repository"
 	"github.com/data-overdrive-alibaba-hackathon-2024/internal/service"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
@@ -33,6 +34,8 @@ func main() {
 	userHandler := handler.NewUserHandler(userService, logger, questionHandler, questionService)
 
 	app := fiber.New()
+
+	app.Use(cors.New())
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World!")
