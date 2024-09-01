@@ -24,11 +24,12 @@ func main() {
 	defer db.Close()
 
 	questionRepository := repository.NewQuestionRepository(db, logger)
-	questionService := service.NewQuestionService(questionRepository, logger)
-	questionHandler := handler.NewQuestionHandler(questionService, logger)
-
 	userRepository := repository.NewUserRepository(db, logger)
+
+	questionService := service.NewQuestionService(questionRepository, userRepository, logger)
 	userService := service.NewUserService(userRepository, logger)
+
+	questionHandler := handler.NewQuestionHandler(questionService, userService, logger)
 	userHandler := handler.NewUserHandler(userService, logger, questionHandler, questionService)
 
 	app := fiber.New()
@@ -43,11 +44,13 @@ func main() {
 	//user
 	v1.Post("/auth/register", userHandler.CreateUser)
 	v1.Post("/auth/login", userHandler.Login)
+	v1.Get("/auth/profile", middleware.JWTMiddleware(), userHandler.GetUser)
 
 	//question
 	v1.Post("/generate/questions", middleware.JWTMiddleware(), questionHandler.GenerateQuestion)
 	v1.Get("/questions", middleware.JWTMiddleware(), questionHandler.GetQuestion)
 	v1.Put("/questions/done/:question_id", middleware.JWTMiddleware(), questionHandler.UpdateQuestionDone)
+	v1.Put("/questions/reset", middleware.JWTMiddleware(), questionHandler.ResetQuestionAndLevel)
 
 	app.Listen(":3000")
 }

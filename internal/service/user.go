@@ -20,6 +20,8 @@ type UserService interface {
 	CreateUser(input model.CreateUserInput) error
 	Login(email, password string) (string, error)
 	GetUserByEmail(email string) (model.User, error)
+	GetUserById(id string) (model.User, error)
+	UpdateUserLevel(id string, level int) error
 }
 
 func NewUserService(userRepository repository.UserRepository, logger *zap.Logger) UserService {
@@ -66,4 +68,12 @@ func (s *userService) Login(email, password string) (string, error) {
 
 func (s *userService) GetUserByEmail(email string) (model.User, error) {
 	return s.userRepository.GetUserByEmail(email)
+}
+
+func (s *userService) GetUserById(id string) (model.User, error) {
+	return s.userRepository.GetUserById(id)
+}
+
+func (s *userService) UpdateUserLevel(id string, level int) error {
+	return s.userRepository.UpdateUserLevel(id, level)
 }

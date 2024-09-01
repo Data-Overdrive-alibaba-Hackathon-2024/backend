@@ -17,6 +17,7 @@ type QuestionRepository interface {
 	InsertQuestion(input model.InsertQuestionInput) error
 	GetQuestion(input model.GetQuestionInput) (model.GetQuestionOutput, error)
 	UpdateQuestionDone(questiionId string) error
+	DeleteAllQuestionByUserId(userId string) error
 }
 
 func NewQuestionRepository(db *sql.DB, logger *zap.Logger) QuestionRepository {
@@ -62,6 +63,19 @@ func (r *questionRepository) UpdateQuestionDone(questiionId string) error {
 	`, questiionId)
 	if err != nil {
 		r.logger.Error("failed to update question done", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (r *questionRepository) DeleteAllQuestionByUserId(userId string) error {
+	_, err := r.db.Exec(`
+		DELETE FROM questions
+		WHERE user_id = $1
+	`, userId)
+	if err != nil {
+		r.logger.Error("failed to delete all question by user id", zap.Error(err))
 		return err
 	}
 

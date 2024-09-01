@@ -17,6 +17,7 @@ type userHandler struct {
 type UserHandler interface {
 	CreateUser(c *fiber.Ctx) error
 	Login(c *fiber.Ctx) error
+	GetUser(c *fiber.Ctx) error
 }
 
 func NewUserHandler(userService service.UserService, logger *zap.Logger, questionHandler QuestionHandler, questionService service.QuestionService) UserHandler {
@@ -110,5 +111,24 @@ func (h *userHandler) Login(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "login success",
 		"token":   token,
+	})
+}
+
+func (h *userHandler) GetUser(c *fiber.Ctx) error {
+	userId := c.Locals("userId").(string)
+
+	user, err := h.userService.GetUserById(userId)
+	if err != nil {
+		h.logger.Error("failed to get user", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "failed",
+			"message": "failed to get user",
+		})
+	}
+	user.Password = ""
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   user,
 	})
 }
