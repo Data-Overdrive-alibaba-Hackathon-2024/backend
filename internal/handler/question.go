@@ -39,6 +39,13 @@ func (h *questionHandler) GenerateQuestion(c *fiber.Ctx) error {
 		})
 	}
 
+	if req.Level <= 1 || req.Level > 10 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "failed",
+			"message": "invalid level",
+		})
+	}
+
 	questionText, err := h.RequestAI(req.Level)
 	if err != nil {
 		h.logger.Error("failed to generate question", zap.Error(err))

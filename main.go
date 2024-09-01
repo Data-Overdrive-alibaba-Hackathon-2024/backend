@@ -23,13 +23,13 @@ func main() {
 	db := config.NewDBPool()
 	defer db.Close()
 
-	userRepository := repository.NewUserRepository(db, logger)
-	userService := service.NewUserService(userRepository, logger)
-	userHandler := handler.NewUserHandler(userService, logger)
-
 	questionRepository := repository.NewQuestionRepository(db, logger)
 	questionService := service.NewQuestionService(questionRepository, logger)
 	questionHandler := handler.NewQuestionHandler(questionService, logger)
+
+	userRepository := repository.NewUserRepository(db, logger)
+	userService := service.NewUserService(userRepository, logger)
+	userHandler := handler.NewUserHandler(userService, logger, questionHandler, questionService)
 
 	app := fiber.New()
 

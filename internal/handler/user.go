@@ -8,8 +8,10 @@ import (
 )
 
 type userHandler struct {
-	userService service.UserService
-	logger      *zap.Logger
+	userService     service.UserService
+	logger          *zap.Logger
+	questionHandler QuestionHandler
+	questionService service.QuestionService
 }
 
 type UserHandler interface {
@@ -17,10 +19,12 @@ type UserHandler interface {
 	Login(c *fiber.Ctx) error
 }
 
-func NewUserHandler(userService service.UserService, logger *zap.Logger) UserHandler {
+func NewUserHandler(userService service.UserService, logger *zap.Logger, questionHandler QuestionHandler, questionService service.QuestionService) UserHandler {
 	return &userHandler{
-		userService: userService,
-		logger:      logger,
+		userService:     userService,
+		logger:          logger,
+		questionHandler: questionHandler,
+		questionService: questionService,
 	}
 }
 
@@ -42,6 +46,38 @@ func (h *userHandler) CreateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"status":  "failed",
 			"message": "failed to create user",
+		})
+	}
+
+	user, err := h.userService.GetUserByEmail(input.Email)
+	if err != nil {
+		h.logger.Error("failed to get user by email", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "failed",
+			"message": "failed to get user by email",
+		})
+	}
+
+	question, err := h.questionHandler.RequestAI(1)
+	if err != nil {
+		h.logger.Error("failed to generate question", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "failed",
+			"message": "failed to generate question",
+		})
+	}
+
+	if err := h.questionService.InsertQuestion(model.InsertQuestionInput{
+		UserId:        user.Id,
+		Level:         1,
+		Question:      question.Question,
+		Options:       question.Options,
+		CorrectAnswer: question.CorrectAnswer,
+	}); err != nil {
+		h.logger.Error("failed to insert question", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "failed",
+			"message": "failed to insert question",
 		})
 	}
 

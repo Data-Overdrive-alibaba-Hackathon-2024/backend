@@ -19,6 +19,7 @@ type userService struct {
 type UserService interface {
 	CreateUser(input model.CreateUserInput) error
 	Login(email, password string) (string, error)
+	GetUserByEmail(email string) (model.User, error)
 }
 
 func NewUserService(userRepository repository.UserRepository, logger *zap.Logger) UserService {
@@ -61,4 +62,8 @@ func (s *userService) Login(email, password string) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func (s *userService) GetUserByEmail(email string) (model.User, error) {
+	return s.userRepository.GetUserByEmail(email)
 }
